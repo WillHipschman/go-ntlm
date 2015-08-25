@@ -289,7 +289,29 @@ type V2ClientSession struct {
 }
 
 func (n *V2ClientSession) GenerateNegotiateMessage() (nm *NegotiateMessage, err error) {
-	return nil, nil
+	
+	nm = new(NegotiateMessage)
+	nm.Signature = []byte("NTLMSSP\x00")	
+	nm.MessageType = 0x00000001
+			
+	flags := uint32(0)
+	flags = NTLMSSP_NEGOTIATE_UNICODE.Set(flags)
+	flags = NTLM_NEGOTIATE_OEM.Set(flags)
+	flags = NTLMSSP_NEGOTIATE_NTLM.Set(flags)
+	flags = NTLMSSP_NEGOTIATE_OEM_DOMAIN_SUPPLIED.Set(flags)
+	flags = NTLMSSP_NEGOTIATE_OEM_WORKSTATION_SUPPLIED.Set(flags)
+	flags = NTLMSSP_NEGOTIATE_ALWAYS_SIGN.Set(flags)
+	nm.NegotiateFlags = flags
+		
+			
+		
+	nm.DomainNameFields, err = CreateBytePayload(make([]byte, 8))
+	nm.WorkstationFields, err = CreateBytePayload(make([]byte, 8))
+	nm.Version, err = ReadVersionStruct(make([]byte, 8))
+	nm.Payload = make([]byte, 8)
+	nm.PayloadOffset = 0
+	
+	return nm, err
 }
 
 func (n *V2ClientSession) ProcessChallengeMessage(cm *ChallengeMessage) (err error) {
